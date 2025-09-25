@@ -39,7 +39,8 @@ public class CustomerService {
     customer.setFirstName(customerDTO.getFirstName());
     customer.setLastName(customerDTO.getLastName());
     customer.setEmail(customerDTO.getEmail());
-    customer.setPasswordHash(customerDTO.getPasswordHash());
+    //customer.setPasswordHash(customerDTO.getPasswordHash());
+    customer.setPasswordHash("default_password_hash_placeholder");
 
     Customer savedCustomer = customerRepository.save(customer);
     log.info("Successfully created customer with id: {}", savedCustomer);

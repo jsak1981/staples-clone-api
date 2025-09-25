@@ -77,6 +77,27 @@ public class CustomerController {
     return new ResponseEntity<>(customerResponseDTO, HttpStatus.CREATED);
   }
 
+  @DeleteMapping("/{id}")
+  public ResponseEntity<Void> deleteCustomer(@PathVariable Long id) {
+    log.info("Received DELETE request for customer id: {}", id);
+    if (customerService.deleteCustomer(id)) {
+      return ResponseEntity.noContent().build();
+    } else {
+      return ResponseEntity.notFound().build();
+    }
+  }
+
+  @PutMapping("/{id}")
+  public ResponseEntity<CustomerResponseDTO> updateCustomer(
+      @PathVariable Long id, @RequestBody CustomerRequestDTO customerDTO) {
+    log.info("Received PUT request to update customer with id: {}", id);
+    return customerService
+        .updateCustomer(id, customerDTO)
+        .map(this::convertToDto)
+        .map(ResponseEntity::ok)
+        .orElse(ResponseEntity.notFound().build());
+  }
+
   // ***************  Helper methods *****************//
   private CustomerResponseDTO convertToDto(Customer customer) {
     CustomerResponseDTO cusDTO = new CustomerResponseDTO();

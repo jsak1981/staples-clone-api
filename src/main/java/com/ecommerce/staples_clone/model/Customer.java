@@ -2,10 +2,10 @@ package com.ecommerce.staples_clone.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
-
-import javax.persistence.*;
 import java.time.Instant;
+import java.util.HashSet;
 import java.util.Set;
+import javax.persistence.*;
 
 // Add this annotation to ignore Hibernate's lazy loading proxies
 @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
@@ -27,11 +27,11 @@ public class Customer {
   @Column(name = "email", nullable = false, unique = true)
   private String email;
 
-  @OneToMany(mappedBy = "customer", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-  @JsonManagedReference
-  private Set<Order> orders;
+  @OneToMany(mappedBy = "customer", cascade = CascadeType.ALL, orphanRemoval = true)
+  @JsonManagedReference("customer-orders")
+  private Set<Order> orders = new HashSet<>();
 
-  @Column(name = "password_hash")
+  @Column(name = "password_hash", nullable = false)
   private String passwordHash;
 
   @Column(name = "created_at")

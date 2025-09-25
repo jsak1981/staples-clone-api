@@ -6,12 +6,14 @@ import com.ecommerce.staples_clone.model.ProductCategory;
 import com.ecommerce.staples_clone.repository.ProductCategoryRepository;
 import com.ecommerce.staples_clone.repository.ProductRepository;
 import java.lang.reflect.Field;
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.util.ReflectionUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.ResourceAccessException;
@@ -69,26 +71,27 @@ public class ProductService {
     return productRepository
         .findById(id)
         .map(
-            product -> {
+            existingProduct -> {
               updates.forEach(
                   (key, value) -> {
                     try {
                       Field field = Product.class.getDeclaredField(key);
                       field.setAccessible(true);
 
-                      if (field.getType().equals(Integer.class)
-                          || field.getType().equals(int.class)) {
-                        field.set(product, ((Number) value).intValue());
+                      if (field.getType().equals(BigDecimal.class) && value instanceof Number) {
+                        ReflectionUtils.setField(
+                            field, existingProduct, new BigDecimal(value.toString()));
                       } else {
-                        field.set(product, value);
+                        // Otherwise, set the value directly.
+                        ReflectionUtils.setField(field, existingProduct, value);
                       }
 
-                    } catch (NoSuchFieldException | IllegalAccessException ex) {
+                    } catch (NoSuchFieldException ex) {
                       log.error("Field not found or could not be accessed: {}", key, ex);
                       throw new RuntimeException("Invalid field for patching: " + key);
                     }
                   });
-              return productRepository.save(product);
+              return productRepository.save(existingProduct);
             });
   }
 

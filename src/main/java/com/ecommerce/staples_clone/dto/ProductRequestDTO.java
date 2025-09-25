@@ -9,7 +9,7 @@ public class ProductRequestDTO {
   private String sku;
   private BigDecimal price;
   private int stockQuantity;
-  private Long categoryId;
+  private Integer categoryId;
 
   public String getName() {
     return name;
@@ -51,11 +51,11 @@ public class ProductRequestDTO {
     this.stockQuantity = stockQuantity;
   }
 
-  public Long getCategoryId() {
+  public Integer getCategoryId() {
     return categoryId;
   }
 
-  public void setCategoryId(Long categoryId) {
+  public void setCategoryId(Integer categoryId) {
     this.categoryId = categoryId;
   }
 }
