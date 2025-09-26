@@ -9,7 +9,7 @@ public class CustomerRequestDTO {
   private String firstName;
   private String lastName;
   private String email;
-  private String passwordHash;
+  private String password;
 
   public String getFirstName() {
     return firstName;
@@ -35,11 +35,11 @@ public class CustomerRequestDTO {
     this.email = email;
   }
 
-  public String getPasswordHash() {
-    return passwordHash;
+  public String getPassword() {
+    return password;
   }
 
-  public void setPasswordHash(String passwordHash) {
-    this.passwordHash = passwordHash;
+  public void setPassword(String p) {
+    this.password = p;
   }
 }

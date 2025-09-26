@@ -32,7 +32,7 @@ public class Customer {
   private Set<Order> orders = new HashSet<>();
 
   @Column(name = "password_hash", nullable = false)
-  private String passwordHash;
+  private String password;
 
   @Column(name = "created_at")
   private final Instant createdAt = Instant.now();
@@ -80,12 +80,12 @@ public class Customer {
     this.orders = orders;
   }
 
-  public String getPasswordHash() {
-    return passwordHash;
+  public String getPassword() {
+    return password;
   }
 
-  public void setPasswordHash(String passwordHash) {
-    this.passwordHash = passwordHash;
+  public void setPassword(String p) {
+    this.password = p;
   }
 
   public Instant getCreatedAt() {

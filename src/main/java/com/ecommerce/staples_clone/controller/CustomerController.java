@@ -1,9 +1,6 @@
 package com.ecommerce.staples_clone.controller;
 
-import com.ecommerce.staples_clone.dto.CustomerRequestDTO;
-import com.ecommerce.staples_clone.dto.CustomerResponseDTO;
-import com.ecommerce.staples_clone.dto.OrderItemResponseDTO;
-import com.ecommerce.staples_clone.dto.OrderResponseDTO;
+import com.ecommerce.staples_clone.dto.*;
 import com.ecommerce.staples_clone.model.Customer;
 import com.ecommerce.staples_clone.model.Order;
 import com.ecommerce.staples_clone.service.CustomerService;
@@ -75,6 +72,17 @@ public class CustomerController {
     Customer createCustomer = customerService.createCustomer(cusDTO);
     CustomerResponseDTO customerResponseDTO = convertToDto(createCustomer);
     return new ResponseEntity<>(customerResponseDTO, HttpStatus.CREATED);
+  }
+
+  @PutMapping("{id}/change-password")
+  public ResponseEntity<String> changePassword(
+      @PathVariable Long id, @RequestBody ChangePasswordDTO changePasswordDTO) {
+    if (customerService.changePassword(id, changePasswordDTO)) {
+      return ResponseEntity.ok("Password changed successfully.");
+    } else {
+      return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+          .body("Failed to change password. Check old password.");
+    }
   }
 
   @DeleteMapping("/{id}")
