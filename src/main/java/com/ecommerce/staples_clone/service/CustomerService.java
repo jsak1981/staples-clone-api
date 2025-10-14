@@ -2,13 +2,14 @@ package com.ecommerce.staples_clone.service;
 
 import com.ecommerce.staples_clone.dto.ChangePasswordDTO;
 import com.ecommerce.staples_clone.dto.CustomerRequestDTO;
+import com.ecommerce.staples_clone.exception.ResourceNotFoundException;
 import com.ecommerce.staples_clone.model.Customer;
 import com.ecommerce.staples_clone.repository.CustomerRepository;
-import java.util.*;
 import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -32,9 +33,11 @@ public class CustomerService {
   }
 
   @Transactional(readOnly = true)
-  public Optional<Customer> getCustomerById(Long id) {
+  public Customer getCustomerById(Long id) {
     log.info("Fetching customer with id: {}", id);
-    return customerRepository.findById(id);
+    return customerRepository
+        .findById(id)
+        .orElseThrow(() -> new ResourceNotFoundException("Customer not found with id: " + id));
   }
 
   @Transactional
@@ -61,48 +64,37 @@ public class CustomerService {
   @Transactional
   public boolean changePassword(Long customerId, ChangePasswordDTO changePasswordDTO) {
     log.debug("Attempting to change password for customer ID: {}", customerId);
-    Customer customer =
-        customerRepository
-            .findById(customerId)
-            .orElseThrow(() -> new RuntimeException("Customer not found with id: " + customerId));
 
-    // 1. Verify the old password
+    Customer customer = getCustomerById(customerId);
     if (!passwordEncoder.matches(changePasswordDTO.getOldPassword(), customer.getPassword())) {
       log.warn("Password change failed for customer ID: {}. Incorrect old password.", customerId);
       return false;
     }
-
-    // 2. Hash and set the new password
     String newHashedPassword = passwordEncoder.encode(changePasswordDTO.getNewPassword());
     customer.setPassword(newHashedPassword);
     customerRepository.save(customer);
-
     log.info("Successfully changed password for customer ID: {}", customerId);
     return true;
   }
 
   @Transactional
-  public Optional<Customer> updateCustomer(Long id, CustomerRequestDTO cusDto) {
+  public Customer updateCustomer(Long id, CustomerRequestDTO cusDto) {
     log.info("Attempting to update customer with id: {}", id);
-    return customerRepository
-        .findById(id)
-        .map(
-            customer -> {
-              customer.setFirstName(cusDto.getFirstName());
-              customer.setLastName(cusDto.getLastName());
-              customer.setEmail(cusDto.getEmail());
-              return customerRepository.save(customer);
-            });
+
+    Customer existingCustomer = getCustomerById(id);
+    existingCustomer.setFirstName(cusDto.getFirstName());
+    existingCustomer.setLastName(cusDto.getLastName());
+    existingCustomer.setEmail(cusDto.getEmail());
+    return customerRepository.save(existingCustomer);
   }
 
   @Transactional
-  public boolean deleteCustomer(Long id) {
-    if (customerRepository.existsById(id)) {
-      customerRepository.deleteById(id);
-      log.info("Successfully deleted customer with id: {}", id);
-      return true;
+  public void deleteCustomer(Long id) {
+    if (!customerRepository.existsById(id)) {
+      log.warn("Could not delete. Customer not found with id: {}", id);
+      throw new ResourceNotFoundException("Customer not found with id: " + id);
     }
-    log.warn("Could not delete. Customer not found with id: {}", id);
-    return false;
+    customerRepository.deleteById(id);
+    log.info("Successfully deleted customer with id: {}", id);
   }
 }

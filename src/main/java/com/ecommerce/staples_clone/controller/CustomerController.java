@@ -37,32 +37,18 @@ public class CustomerController {
   @GetMapping("/{id}")
   public ResponseEntity<CustomerResponseDTO> getCustomerById(@PathVariable Long id) {
     log.info("Received GET request for customer with id: {}", id);
-    return customerService
-        .getCustomerById(id)
-        .map(this::convertToDto) // Use the new mapping method
-        .map(ResponseEntity::ok)
-        .orElseGet(
-            () -> {
-              log.warn("Customer not found with id: {}", id);
-              return ResponseEntity.notFound().build();
-            });
+    Customer customer = customerService.getCustomerById(id);
+    return ResponseEntity.ok(convertToDto(customer));
   }
 
   @GetMapping("/{id}/orders")
-  public ResponseEntity<Set<OrderResponseDTO>> getCustomerOrders(@PathVariable Long id) {
+  public ResponseEntity<List<OrderResponseDTO>> getOrdersByCustomer(@PathVariable Long id) {
     log.info("Received GET request for orders for customer with id: {}", id);
-    return customerService
-        .getCustomerById(id)
-        .map(
-            customer -> {
-              log.info("Found {} orders for customer with id: {}", customer.getOrders().size(), id);
-              Set<OrderResponseDTO> orderDtos =
-                  customer.getOrders().stream()
-                      .map(this::convertOrderToDto)
-                      .collect(Collectors.toSet());
-              return ResponseEntity.ok(orderDtos);
-            })
-        .orElse(ResponseEntity.notFound().build());
+
+    Customer customer = customerService.getCustomerById(id);
+    List<OrderResponseDTO> orderDtos =
+        customer.getOrders().stream().map(this::convertOrderToDto).collect(Collectors.toList());
+    return ResponseEntity.ok(orderDtos);
   }
 
   @PostMapping
@@ -88,22 +74,16 @@ public class CustomerController {
   @DeleteMapping("/{id}")
   public ResponseEntity<Void> deleteCustomer(@PathVariable Long id) {
     log.info("Received DELETE request for customer id: {}", id);
-    if (customerService.deleteCustomer(id)) {
-      return ResponseEntity.noContent().build();
-    } else {
-      return ResponseEntity.notFound().build();
-    }
+    customerService.deleteCustomer(id);
+    return ResponseEntity.noContent().build();
   }
 
   @PutMapping("/{id}")
   public ResponseEntity<CustomerResponseDTO> updateCustomer(
       @PathVariable Long id, @RequestBody CustomerRequestDTO customerDTO) {
     log.info("Received PUT request to update customer with id: {}", id);
-    return customerService
-        .updateCustomer(id, customerDTO)
-        .map(this::convertToDto)
-        .map(ResponseEntity::ok)
-        .orElse(ResponseEntity.notFound().build());
+    Customer updatedCustomer = customerService.updateCustomer(id, customerDTO);
+    return ResponseEntity.ok(convertToDto(updatedCustomer));
   }
 
   // ***************  Helper methods *****************//

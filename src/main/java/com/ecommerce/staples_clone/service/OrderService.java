@@ -1,6 +1,8 @@
 package com.ecommerce.staples_clone.service;
 
 import com.ecommerce.staples_clone.dto.OrderRequestDTO;
+import com.ecommerce.staples_clone.dto.OrderUpdateDTO;
+import com.ecommerce.staples_clone.exception.ResourceNotFoundException;
 import com.ecommerce.staples_clone.model.*;
 import com.ecommerce.staples_clone.repository.CustomerRepository;
 import com.ecommerce.staples_clone.repository.OrderRepository;
@@ -35,71 +37,62 @@ public class OrderService {
   }
 
   @Transactional(readOnly = true)
-  public Optional<Order> getOrderById(Long orderId) {
+  public Order getOrderById(Long orderId) {
     log.debug("Querying database for order with id: {}", orderId);
-    return orderRepository.findById(orderId);
+    return orderRepository
+        .findById(orderId)
+        .orElseThrow(() -> new ResourceNotFoundException("Order not found with id: " + orderId));
   }
 
-  /**
-   * @param request
-   * @return
-   */
   @Transactional
   public Order createOrder(OrderRequestDTO request) {
-    Customer customer =
+    Customer existingCustomer =
         customerRepository
             .findById(request.getCustomerId())
-            .orElseThrow(() -> new RuntimeException("Customer not found"));
-
+            .orElseThrow(
+                () ->
+                    new ResourceNotFoundException(
+                        "Cannot create order: Product not found with id: "
+                            + request.getCustomerId()));
     Order order = new Order();
-    order.setCustomer(customer);
+    order.setCustomer(existingCustomer);
     order.setStatus("PENDING");
 
-    Set<OrderItem> orderItems = new HashSet<>();
     BigDecimal totalAmount = BigDecimal.ZERO;
-
     for (OrderRequestDTO.OrderItemDTO itemDto : request.getItems()) {
       Product product =
           productRepository
               .findById(itemDto.getProductId())
-              .orElseThrow(() -> new RuntimeException("Product not found"));
-
+              .orElseThrow(
+                  () ->
+                      new ResourceNotFoundException(
+                          "Cannot create order: Product not found with id: "
+                              + itemDto.getProductId()));
       OrderItem orderItem = new OrderItem();
-      orderItem.setOrder(order);
       orderItem.setProduct(product);
       orderItem.setQuantity(itemDto.getQuantity());
       orderItem.setPriceAtPurchase(product.getPrice());
-      orderItems.add(orderItem);
-
+      order.addItem(orderItem);
       totalAmount =
           totalAmount.add(product.getPrice().multiply(BigDecimal.valueOf(itemDto.getQuantity())));
     }
-    order.setItems(orderItems);
     order.setTotalAmount(totalAmount);
     return orderRepository.save(order);
   }
 
   @Transactional
-  public Optional<Order> updateOrderStatus(Long id, String status) {
-    Optional<Order> updatedOrder =
-        orderRepository
-            .findById(id)
-            .map(
-                existingOrder -> {
-                  existingOrder.setStatus(status);
-                  return orderRepository.save(existingOrder);
-                });
-    return updatedOrder;
+  public Order updateOrderStatus(Long id, OrderUpdateDTO orderDto) {
+
+    Order exsitingOrder = getOrderById(id);
+    exsitingOrder.setStatus(orderDto.getStatus());
+    return orderRepository.save(exsitingOrder);
   }
 
   @Transactional
-  public boolean deleteOrder(Long id) {
-    if (orderRepository.existsById(id)) {
-      orderRepository.deleteById(id);
-      log.info("Successfully deleted order with id: {}", id);
-      return true;
+  public void deleteOrder(Long id) {
+    if (!orderRepository.existsById(id)) {
+      throw new ResourceNotFoundException("Order not found with id: " + id);
     }
-    log.warn("Could not delete. Order not found with id: {}", id);
-    return false;
+    orderRepository.deleteById(id);
   }
 }

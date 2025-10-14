@@ -37,12 +37,8 @@ public class ProductController {
   @GetMapping("/{id}")
   public ResponseEntity<ProductResponseDTO> getProductById(@PathVariable Long id) {
     log.info("Received request to get product by id: {}", id);
-
-    return productService
-        .getProductById(id)
-        .map(this::convertToDto)
-        .map(ResponseEntity::ok)
-        .orElse(ResponseEntity.notFound().build());
+    Product product = productService.getProductById(id);
+    return ResponseEntity.ok(convertToDto(product));
   }
 
   @PostMapping
@@ -50,8 +46,8 @@ public class ProductController {
       @RequestBody ProductRequestDTO productDto) {
     log.info("Received request to create a new product");
     log.debug("Product payload: {}", productDto);
+
     Product newProduct = productService.createProduct(productDto);
-    log.info("Successfully created product with id: {}", newProduct.getProductId());
     return new ResponseEntity<>(convertToDto(newProduct), HttpStatus.CREATED);
   }
 
@@ -61,47 +57,32 @@ public class ProductController {
     log.info("Received request to update product with id: {}", id);
     log.debug("Update payload: {}", productDto);
 
-    return productService
-        .updateProduct(id, productDto)
-        .map(this::convertToDto)
-        .map(ResponseEntity::ok)
-        .orElse(ResponseEntity.notFound().build());
+    Product newProduct = productService.updateProduct(id, productDto);
+    return new ResponseEntity<>(convertToDto(newProduct), HttpStatus.CREATED);
   }
 
   @PatchMapping("/{id}")
   public ResponseEntity<ProductResponseDTO> patchProduct(
       @PathVariable Long id, @RequestBody Map<String, Object> updates) {
     log.info("Received PATCH request to partially update product id: {}", id);
-    return productService
-        .patchProduct(id, updates)
-        .map(this::convertToDto)
-        .map(ResponseEntity::ok)
-        .orElse(ResponseEntity.notFound().build());
+
+    Product updatedProduct = productService.patchProduct(id, updates);
+    return ResponseEntity.ok(convertToDto(updatedProduct));
   }
 
   @DeleteMapping("/{id}")
   public ResponseEntity<Void> deleteProduct(@PathVariable Long id) {
     log.info("Received request to delete product with id: {}", id);
-    if (productService.deleteProduct(id)) {
-      log.info("Successfully deleted product with id: {}", id);
-      return ResponseEntity.noContent().build();
-    } else {
-      log.warn("Product not found with id: {}, cannot delete", id);
-      return ResponseEntity.notFound().build();
-    }
+
+    productService.deleteProduct(id);
+    return ResponseEntity.noContent().build();
   }
 
   @RequestMapping(value = "/{id}", method = RequestMethod.HEAD)
   public ResponseEntity<Void> headProduct(@PathVariable Long id) {
     log.info("Received HEAD request for product id: {}", id);
-    boolean exists = productService.getProductById(id).isPresent();
-    if (exists) {
-      log.info("Product exists for HEAD request, id: {}", id);
-      return ResponseEntity.ok().build();
-    } else {
-      log.warn("Product not found for HEAD request, id: {}", id);
-      return ResponseEntity.notFound().build();
-    }
+    Product existingProduct = productService.getProductById(id);
+    return ResponseEntity.ok().build();
   }
 
   @RequestMapping(method = RequestMethod.OPTIONS)
