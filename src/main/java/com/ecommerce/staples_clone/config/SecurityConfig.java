@@ -61,6 +61,14 @@ public class SecurityConfig {
         .antMatchers("/api/customers/**")
         .permitAll()
 
+        // permit for all endpoints for excel.
+        .antMatchers("/api/excel/**")
+        .permitAll()
+
+        // permit for all endpoints for batch.
+        .antMatchers("/api/jobs/**")
+        .permitAll()
+
         // 1. Only allow users with ROLE_USER to access /hello
         .antMatchers("/api/hello")
         .hasRole("USER")
@@ -80,33 +88,4 @@ public class SecurityConfig {
 
     return http.build();
   }
-
-  /*@Bean
-  public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-    http.csrf()
-        .disable()
-        // Define authorization rules
-        .authorizeRequests()
-
-        // 1. Only allow users with ROLE_USER to access /hello
-        .antMatchers("/hello")
-        .hasRole("USER")
-
-        // 2. Only allow users with ROLE_ADMIN to access /admin/**
-        .antMatchers("/admin/**")
-        .hasRole("ADMIN")
-
-        // All other requests must be authenticated
-        .anyRequest()
-        .authenticated()
-        .and()
-        // Set the session management to STATELESS
-        .sessionManagement()
-        .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-        .and()
-        // Add your custom JWT filter
-        .addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class);
-
-    return http.build();
-  }*/
 }

@@ -26,8 +26,6 @@ public class GlobalExceptionHandler {
     return new ResponseEntity<>(responseDto, HttpStatus.NOT_FOUND);
   }
 
-  // handleAuthenticationFailedException
-
   @ExceptionHandler(AuthenticationFailedException.class)
   public ResponseEntity<ErrorResponseDTO> handleAuthenticationFailedException(
       AuthenticationFailedException ex, WebRequest request) {

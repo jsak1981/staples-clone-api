@@ -1,6 +1,6 @@
 package com.ecommerce.staples_clone.service;
 
-import com.ecommerce.staples_clone.util.PasswordEncoderUtil;
+import com.ecommerce.staples_clone.util.AppUtils;
 import java.util.Collections;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.User;
@@ -16,16 +16,14 @@ public class JwtMyUserDetailsService implements UserDetailsService {
   public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
 
     if ("user".equals(username)) {
-      final String encodedPassword = PasswordEncoderUtil.getEncodedPassword("password");
       return new User(
           "user",
-          encodedPassword,
+          AppUtils.getEncodedPassword("password"),
           Collections.singletonList((new SimpleGrantedAuthority(("ROLE_USER")))));
     } else if ("admin".equals(username)) {
-      final String encodedPassword = PasswordEncoderUtil.getEncodedPassword("adminpass");
       return new User(
           "admin",
-          encodedPassword,
+          AppUtils.getEncodedPassword("adminpass"),
           Collections.singletonList((new SimpleGrantedAuthority(("ROLE_ADMIN")))));
     } else {
       throw new UsernameNotFoundException("User not found with username: " + username);
