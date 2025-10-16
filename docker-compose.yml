@@ -1,0 +1,56 @@
+version: '3.8'
+
+services:
+  # Define the PostgreSQL database service
+  postgres-db:
+    image: postgres:14.5
+    container_name: staples-postgres
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=Testing123
+      - POSTGRES_DB=staples_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+
+  # Define the Spring Boot application service
+  staples-api:
+    build: .
+    container_name: staples-api
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres-db
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-db:5432/staples_db
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=Testing123
+      - SPRING_BATCH_JDBC_INITIALIZE_SCHEMA=ALWAYS
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+      - SPRING_JPA_PROPERTIES_HIBERNATE_DEFAULT_SCHEMA=public
+      - spring.batch.job.enabled=false
+      - SPRING_SQL_INIT_MODE=always
+      # --- THIS IS THE FIX ---
+      # This property ensures that Hibernate's schema creation (ddl-auto) runs
+      # BEFORE the data.sql script. This resolves the race condition.
+      - spring.jpa.defer-datasource-initialization=true
+
+volumes:
+  # Define the named volume for persistent PostgreSQL data
+  postgres-data:
+#  ```
+#
+#  ### Actionable Steps (CRITICAL)
+#
+#  To ensure this new initialization order works correctly, you must start with a completely fresh database.
+#
+#  1.  **Stop and Remove Everything:** In your terminal, run this command to remove the containers and the old, empty data volume.
+#  ```bash
+#  docker-compose down -v  , always use docker-compose down
+#  ```
+#  2.  **Restart the Application:** Now, start everything again with the final, correct configuration.
+#  ```bash
+#  docker-compose up --build , always use docker-compose up
+
+
