@@ -69,6 +69,10 @@ public class SecurityConfig {
         .antMatchers("/api/jobs/**")
         .permitAll()
 
+        // permit for all endpoints for Mongo DB CRUD.
+        .antMatchers("/api/mongo/**")
+        .permitAll()
+
         // 1. Only allow users with ROLE_USER to access /hello
         .antMatchers("/api/hello")
         .hasRole("USER")
